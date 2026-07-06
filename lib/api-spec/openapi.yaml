@@ -1,0 +1,1942 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Lab Resource Utilization Platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication and user management
+  - name: equipment
+    description: Equipment inventory management
+  - name: bookings
+    description: Booking and scheduling
+  - name: utilization
+    description: Utilization monitoring
+  - name: maintenance
+    description: Maintenance and calibration
+  - name: institutions
+    description: Institutions and departments
+  - name: sharing
+    description: Inter-institution resource sharing
+  - name: notifications
+    description: Notifications and alerts
+  - name: analytics
+    description: Analytics and dashboards
+  - name: reports
+    description: Reports and exports
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ──────────────────────────────────────────────────────────────────
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /auth/profile:
+    patch:
+      operationId: updateProfile
+      tags: [auth]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # ─── INSTITUTIONS ──────────────────────────────────────────────────────────
+  /institutions:
+    get:
+      operationId: listInstitutions
+      tags: [institutions]
+      summary: List all institutions
+      responses:
+        "200":
+          description: List of institutions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Institution"
+    post:
+      operationId: createInstitution
+      tags: [institutions]
+      summary: Create an institution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstitutionInput"
+      responses:
+        "201":
+          description: Created institution
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Institution"
+
+  /institutions/{institutionId}:
+    get:
+      operationId: getInstitution
+      tags: [institutions]
+      summary: Get institution by ID
+      parameters:
+        - name: institutionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Institution
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Institution"
+
+  /departments:
+    get:
+      operationId: listDepartments
+      tags: [institutions]
+      summary: List departments
+      parameters:
+        - name: institutionId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of departments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Department"
+    post:
+      operationId: createDepartment
+      tags: [institutions]
+      summary: Create a department
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepartmentInput"
+      responses:
+        "201":
+          description: Created department
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+
+  # ─── EQUIPMENT ────────────────────────────────────────────────────────────
+  /equipment:
+    get:
+      operationId: listEquipment
+      tags: [equipment]
+      summary: List all equipment
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of equipment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Equipment"
+    post:
+      operationId: createEquipment
+      tags: [equipment]
+      summary: Register new equipment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipmentInput"
+      responses:
+        "201":
+          description: Created equipment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Equipment"
+
+  /equipment/{equipmentId}:
+    get:
+      operationId: getEquipment
+      tags: [equipment]
+      summary: Get equipment by ID
+      parameters:
+        - name: equipmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Equipment detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Equipment"
+    patch:
+      operationId: updateEquipment
+      tags: [equipment]
+      summary: Update equipment
+      parameters:
+        - name: equipmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipmentUpdate"
+      responses:
+        "200":
+          description: Updated equipment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Equipment"
+    delete:
+      operationId: deleteEquipment
+      tags: [equipment]
+      summary: Delete equipment
+      parameters:
+        - name: equipmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /equipment/{equipmentId}/status:
+    patch:
+      operationId: updateEquipmentStatus
+      tags: [equipment]
+      summary: Update equipment status
+      parameters:
+        - name: equipmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipmentStatusUpdate"
+      responses:
+        "200":
+          description: Updated equipment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Equipment"
+
+  /equipment/categories:
+    get:
+      operationId: listEquipmentCategories
+      tags: [equipment]
+      summary: List equipment categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EquipmentCategory"
+    post:
+      operationId: createEquipmentCategory
+      tags: [equipment]
+      summary: Create equipment category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipmentCategoryInput"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EquipmentCategory"
+
+  # ─── BOOKINGS ────────────────────────────────────────────────────────────
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: equipmentId
+          in: query
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Created booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{bookingId}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking by ID
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingUpdate"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{bookingId}/approve:
+    post:
+      operationId: approveBooking
+      tags: [bookings]
+      summary: Approve a booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Approved booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{bookingId}/reject:
+    post:
+      operationId: rejectBooking
+      tags: [bookings]
+      summary: Reject a booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingRejection"
+      responses:
+        "200":
+          description: Rejected booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{bookingId}/cancel:
+    post:
+      operationId: cancelBooking
+      tags: [bookings]
+      summary: Cancel a booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /equipment/availability:
+    get:
+      operationId: getEquipmentAvailability
+      tags: [bookings]
+      summary: Get equipment availability slots
+      parameters:
+        - name: equipmentId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Availability slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailabilitySlot"
+
+  /bookings/waitlist:
+    get:
+      operationId: listWaitlist
+      tags: [bookings]
+      summary: List waitlist entries
+      responses:
+        "200":
+          description: List of waitlist entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WaitlistEntry"
+    post:
+      operationId: joinWaitlist
+      tags: [bookings]
+      summary: Join waitlist for equipment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WaitlistInput"
+      responses:
+        "201":
+          description: Added to waitlist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaitlistEntry"
+
+  # ─── UTILIZATION ──────────────────────────────────────────────────────────
+  /utilization:
+    get:
+      operationId: listUtilizationRecords
+      tags: [utilization]
+      summary: List utilization records
+      parameters:
+        - name: equipmentId
+          in: query
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Utilization records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UtilizationRecord"
+
+  /utilization/stats:
+    get:
+      operationId: getEquipmentUtilizationStats
+      tags: [utilization]
+      summary: Get utilization stats for equipment
+      parameters:
+        - name: equipmentId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: period
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Utilization stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UtilizationStats"
+
+  /utilization/heatmap:
+    get:
+      operationId: getUtilizationHeatmap
+      tags: [utilization]
+      summary: Get utilization heatmap data
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: institutionId
+          in: query
+          schema:
+            type: integer
+        - name: period
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Heatmap data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HeatmapDataPoint"
+
+  /utilization/idle-equipment:
+    get:
+      operationId: getIdleEquipment
+      tags: [utilization]
+      summary: Get currently idle equipment
+      responses:
+        "200":
+          description: Idle equipment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IdleEquipmentItem"
+
+  # ─── MAINTENANCE ──────────────────────────────────────────────────────────
+  /maintenance:
+    get:
+      operationId: listMaintenanceRecords
+      tags: [maintenance]
+      summary: List maintenance records
+      parameters:
+        - name: equipmentId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Maintenance records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MaintenanceRecord"
+    post:
+      operationId: createMaintenanceRecord
+      tags: [maintenance]
+      summary: Create maintenance record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceInput"
+      responses:
+        "201":
+          description: Created maintenance record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceRecord"
+
+  /maintenance/{maintenanceId}:
+    get:
+      operationId: getMaintenanceRecord
+      tags: [maintenance]
+      summary: Get maintenance record by ID
+      parameters:
+        - name: maintenanceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Maintenance record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceRecord"
+    patch:
+      operationId: updateMaintenanceRecord
+      tags: [maintenance]
+      summary: Update maintenance record
+      parameters:
+        - name: maintenanceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceUpdate"
+      responses:
+        "200":
+          description: Updated maintenance record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceRecord"
+
+  /maintenance/upcoming:
+    get:
+      operationId: getUpcomingMaintenance
+      tags: [maintenance]
+      summary: Get upcoming maintenance tasks
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Upcoming maintenance
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MaintenanceRecord"
+
+  # ─── INTER-INSTITUTION SHARING ────────────────────────────────────────────
+  /sharing/agreements:
+    get:
+      operationId: listSharingAgreements
+      tags: [sharing]
+      summary: List sharing agreements
+      responses:
+        "200":
+          description: List of sharing agreements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SharingAgreement"
+    post:
+      operationId: createSharingAgreement
+      tags: [sharing]
+      summary: Create sharing agreement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SharingAgreementInput"
+      responses:
+        "201":
+          description: Created agreement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharingAgreement"
+
+  /sharing/agreements/{agreementId}:
+    get:
+      operationId: getSharingAgreement
+      tags: [sharing]
+      summary: Get sharing agreement by ID
+      parameters:
+        - name: agreementId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sharing agreement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharingAgreement"
+    patch:
+      operationId: updateSharingAgreement
+      tags: [sharing]
+      summary: Update sharing agreement status
+      parameters:
+        - name: agreementId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SharingAgreementUpdate"
+      responses:
+        "200":
+          description: Updated agreement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharingAgreement"
+
+  /sharing/equipment:
+    get:
+      operationId: listSharedEquipment
+      tags: [sharing]
+      summary: List equipment available for inter-institution sharing
+      responses:
+        "200":
+          description: Shared equipment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Equipment"
+
+  # ─── NOTIFICATIONS ────────────────────────────────────────────────────────
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for current user
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{notificationId}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ─── ANALYTICS ────────────────────────────────────────────────────────────
+  /analytics/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [analytics]
+      summary: Get dashboard summary statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /analytics/equipment-utilization:
+    get:
+      operationId: getEquipmentUtilizationReport
+      tags: [analytics]
+      summary: Get equipment utilization analytics
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Utilization analytics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EquipmentUtilizationReport"
+
+  /analytics/booking-trends:
+    get:
+      operationId: getBookingTrends
+      tags: [analytics]
+      summary: Get booking trends over time
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Booking trend data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BookingTrendPoint"
+
+  /analytics/top-equipment:
+    get:
+      operationId: getTopEquipment
+      tags: [analytics]
+      summary: Get most-used equipment
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Top equipment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopEquipmentItem"
+
+  /analytics/cost-analysis:
+    get:
+      operationId: getCostAnalysis
+      tags: [analytics]
+      summary: Get cost analysis by department
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cost analysis data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CostAnalysisItem"
+
+  /analytics/sharing-stats:
+    get:
+      operationId: getSharingStats
+      tags: [analytics]
+      summary: Get inter-institution sharing statistics
+      responses:
+        "200":
+          description: Sharing stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharingStats"
+
+  # ─── USERS ────────────────────────────────────────────────────────────────
+  /users:
+    get:
+      operationId: listUsers
+      tags: [auth]
+      summary: List users (admin only)
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: institutionId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /users/{userId}/role:
+    patch:
+      operationId: updateUserRole
+      tags: [auth]
+      summary: Update user role
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRoleUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        clerkId:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [RESEARCHER, LAB_TECHNICIAN, LAB_MANAGER, DEPT_HEAD, INSTITUTION_ADMIN, SYSTEM_ADMIN]
+        institutionId:
+          type: ["integer", "null"]
+        departmentId:
+          type: ["integer", "null"]
+        phone:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - clerkId
+        - email
+        - firstName
+        - lastName
+        - role
+        - createdAt
+
+    ProfileUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+
+    UserRoleUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [RESEARCHER, LAB_TECHNICIAN, LAB_MANAGER, DEPT_HEAD, INSTITUTION_ADMIN, SYSTEM_ADMIN]
+        institutionId:
+          type: ["integer", "null"]
+        departmentId:
+          type: ["integer", "null"]
+      required:
+        - role
+
+    Institution:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        address:
+          type: ["string", "null"]
+        contactEmail:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - type
+        - createdAt
+
+    InstitutionInput:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        address:
+          type: string
+        contactEmail:
+          type: string
+      required:
+        - name
+        - type
+
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        institutionId:
+          type: integer
+        headUserId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - institutionId
+        - createdAt
+
+    DepartmentInput:
+      type: object
+      properties:
+        name:
+          type: string
+        institutionId:
+          type: integer
+        headUserId:
+          type: integer
+      required:
+        - name
+        - institutionId
+
+    EquipmentCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+
+    EquipmentCategoryInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - name
+
+    Equipment:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        model:
+          type: string
+        serialNumber:
+          type: ["string", "null"]
+        categoryId:
+          type: integer
+        departmentId:
+          type: integer
+        institutionId:
+          type: integer
+        status:
+          type: string
+          enum: [AVAILABLE, BOOKED, UNDER_MAINTENANCE, OUT_OF_SERVICE, RETIRED]
+        acquisitionCost:
+          type: ["number", "null"]
+        dailyRate:
+          type: ["number", "null"]
+        location:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        specifications:
+          type: ["string", "null"]
+        lastCalibrationDate:
+          type: ["string", "null"]
+        nextCalibrationDate:
+          type: ["string", "null"]
+        isShared:
+          type: boolean
+        utilizationRate:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+        categoryName:
+          type: ["string", "null"]
+        departmentName:
+          type: ["string", "null"]
+        institutionName:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - model
+        - categoryId
+        - departmentId
+        - institutionId
+        - status
+        - isShared
+        - createdAt
+
+    EquipmentInput:
+      type: object
+      properties:
+        name:
+          type: string
+        model:
+          type: string
+        serialNumber:
+          type: string
+        categoryId:
+          type: integer
+        departmentId:
+          type: integer
+        institutionId:
+          type: integer
+        acquisitionCost:
+          type: number
+        dailyRate:
+          type: number
+        location:
+          type: string
+        description:
+          type: string
+        specifications:
+          type: string
+        lastCalibrationDate:
+          type: string
+        nextCalibrationDate:
+          type: string
+        isShared:
+          type: boolean
+      required:
+        - name
+        - model
+        - categoryId
+        - departmentId
+        - institutionId
+
+    EquipmentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        model:
+          type: string
+        serialNumber:
+          type: string
+        location:
+          type: string
+        description:
+          type: string
+        specifications:
+          type: string
+        dailyRate:
+          type: number
+        lastCalibrationDate:
+          type: string
+        nextCalibrationDate:
+          type: string
+        isShared:
+          type: boolean
+
+    EquipmentStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [AVAILABLE, BOOKED, UNDER_MAINTENANCE, OUT_OF_SERVICE, RETIRED]
+        reason:
+          type: string
+      required:
+        - status
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        equipmentId:
+          type: integer
+        userId:
+          type: integer
+        startTime:
+          type: string
+        endTime:
+          type: string
+        status:
+          type: string
+          enum: [PENDING_APPROVAL, CONFIRMED, IN_USE, COMPLETED, CANCELLED, NO_SHOW]
+        purpose:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        rejectionReason:
+          type: ["string", "null"]
+        totalCost:
+          type: ["number", "null"]
+        isRecurring:
+          type: boolean
+        approvedBy:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+        equipmentName:
+          type: ["string", "null"]
+        userName:
+          type: ["string", "null"]
+        departmentName:
+          type: ["string", "null"]
+      required:
+        - id
+        - equipmentId
+        - userId
+        - startTime
+        - endTime
+        - status
+        - isRecurring
+        - createdAt
+
+    BookingInput:
+      type: object
+      properties:
+        equipmentId:
+          type: integer
+        startTime:
+          type: string
+        endTime:
+          type: string
+        purpose:
+          type: string
+        notes:
+          type: string
+        isRecurring:
+          type: boolean
+      required:
+        - equipmentId
+        - startTime
+        - endTime
+
+    BookingUpdate:
+      type: object
+      properties:
+        startTime:
+          type: string
+        endTime:
+          type: string
+        purpose:
+          type: string
+        notes:
+          type: string
+
+    BookingRejection:
+      type: object
+      properties:
+        reason:
+          type: string
+      required:
+        - reason
+
+    AvailabilitySlot:
+      type: object
+      properties:
+        startTime:
+          type: string
+        endTime:
+          type: string
+        isAvailable:
+          type: boolean
+        bookingId:
+          type: ["integer", "null"]
+      required:
+        - startTime
+        - endTime
+        - isAvailable
+
+    WaitlistEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        equipmentId:
+          type: integer
+        userId:
+          type: integer
+        requestedStartTime:
+          type: string
+        requestedEndTime:
+          type: string
+        position:
+          type: integer
+        notified:
+          type: boolean
+        createdAt:
+          type: string
+        equipmentName:
+          type: ["string", "null"]
+        userName:
+          type: ["string", "null"]
+      required:
+        - id
+        - equipmentId
+        - userId
+        - requestedStartTime
+        - requestedEndTime
+        - position
+        - notified
+        - createdAt
+
+    WaitlistInput:
+      type: object
+      properties:
+        equipmentId:
+          type: integer
+        requestedStartTime:
+          type: string
+        requestedEndTime:
+          type: string
+      required:
+        - equipmentId
+        - requestedStartTime
+        - requestedEndTime
+
+    UtilizationRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        equipmentId:
+          type: integer
+        bookingId:
+          type: ["integer", "null"]
+        startTime:
+          type: string
+        endTime:
+          type: ["string", "null"]
+        durationMinutes:
+          type: ["integer", "null"]
+        utilizationPercent:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - equipmentId
+        - startTime
+        - createdAt
+
+    UtilizationStats:
+      type: object
+      properties:
+        equipmentId:
+          type: integer
+        equipmentName:
+          type: string
+        totalHoursAvailable:
+          type: number
+        totalHoursUsed:
+          type: number
+        utilizationRate:
+          type: number
+        peakHours:
+          type: string
+        idleHours:
+          type: number
+        bookingCount:
+          type: integer
+      required:
+        - equipmentId
+        - equipmentName
+        - totalHoursAvailable
+        - totalHoursUsed
+        - utilizationRate
+        - bookingCount
+
+    HeatmapDataPoint:
+      type: object
+      properties:
+        hour:
+          type: integer
+        dayOfWeek:
+          type: integer
+        utilizationCount:
+          type: integer
+        utilizationRate:
+          type: number
+      required:
+        - hour
+        - dayOfWeek
+        - utilizationCount
+        - utilizationRate
+
+    IdleEquipmentItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        model:
+          type: string
+        departmentName:
+          type: string
+        idleSinceHours:
+          type: number
+        lastUsed:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - model
+        - departmentName
+        - idleSinceHours
+
+    MaintenanceRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        equipmentId:
+          type: integer
+        type:
+          type: string
+          enum: [PREVENTIVE, CORRECTIVE, CALIBRATION, INSPECTION]
+        status:
+          type: string
+          enum: [SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED]
+        scheduledDate:
+          type: string
+        completedDate:
+          type: ["string", "null"]
+        assignedTechnicianId:
+          type: ["integer", "null"]
+        description:
+          type: ["string", "null"]
+        cost:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+        downtimeHours:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+        equipmentName:
+          type: ["string", "null"]
+        technicianName:
+          type: ["string", "null"]
+      required:
+        - id
+        - equipmentId
+        - type
+        - status
+        - scheduledDate
+        - createdAt
+
+    MaintenanceInput:
+      type: object
+      properties:
+        equipmentId:
+          type: integer
+        type:
+          type: string
+          enum: [PREVENTIVE, CORRECTIVE, CALIBRATION, INSPECTION]
+        scheduledDate:
+          type: string
+        assignedTechnicianId:
+          type: integer
+        description:
+          type: string
+        cost:
+          type: number
+        notes:
+          type: string
+      required:
+        - equipmentId
+        - type
+        - scheduledDate
+
+    MaintenanceUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED]
+        completedDate:
+          type: string
+        assignedTechnicianId:
+          type: integer
+        notes:
+          type: string
+        cost:
+          type: number
+        downtimeHours:
+          type: number
+
+    SharingAgreement:
+      type: object
+      properties:
+        id:
+          type: integer
+        requestingInstitutionId:
+          type: integer
+        owningInstitutionId:
+          type: integer
+        equipmentId:
+          type: integer
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, EXPIRED]
+        dailyRate:
+          type: ["number", "null"]
+        startDate:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        terms:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        equipmentName:
+          type: ["string", "null"]
+        requestingInstitutionName:
+          type: ["string", "null"]
+        owningInstitutionName:
+          type: ["string", "null"]
+      required:
+        - id
+        - requestingInstitutionId
+        - owningInstitutionId
+        - equipmentId
+        - status
+        - createdAt
+
+    SharingAgreementInput:
+      type: object
+      properties:
+        requestingInstitutionId:
+          type: integer
+        owningInstitutionId:
+          type: integer
+        equipmentId:
+          type: integer
+        dailyRate:
+          type: number
+        startDate:
+          type: string
+        endDate:
+          type: string
+        terms:
+          type: string
+      required:
+        - requestingInstitutionId
+        - owningInstitutionId
+        - equipmentId
+
+    SharingAgreementUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, EXPIRED]
+        terms:
+          type: string
+      required:
+        - status
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        isRead:
+          type: boolean
+        relatedEntityType:
+          type: ["string", "null"]
+        relatedEntityId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - type
+        - title
+        - message
+        - isRead
+        - createdAt
+
+    DashboardStats:
+      type: object
+      properties:
+        totalEquipment:
+          type: integer
+        availableEquipment:
+          type: integer
+        bookedEquipment:
+          type: integer
+        underMaintenanceEquipment:
+          type: integer
+        totalBookingsToday:
+          type: integer
+        pendingApprovals:
+          type: integer
+        upcomingMaintenance:
+          type: integer
+        averageUtilizationRate:
+          type: number
+        totalInstitutions:
+          type: integer
+        activeSharingAgreements:
+          type: integer
+        unreadNotifications:
+          type: integer
+        recentBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        equipmentByStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusCount"
+      required:
+        - totalEquipment
+        - availableEquipment
+        - bookedEquipment
+        - underMaintenanceEquipment
+        - totalBookingsToday
+        - pendingApprovals
+        - upcomingMaintenance
+        - averageUtilizationRate
+        - totalInstitutions
+        - activeSharingAgreements
+        - unreadNotifications
+        - recentBookings
+        - equipmentByStatus
+
+    StatusCount:
+      type: object
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+      required:
+        - status
+        - count
+
+    EquipmentUtilizationReport:
+      type: object
+      properties:
+        equipmentId:
+          type: integer
+        equipmentName:
+          type: string
+        departmentName:
+          type: string
+        utilizationRate:
+          type: number
+        totalHoursUsed:
+          type: number
+        bookingCount:
+          type: integer
+        revenue:
+          type: number
+      required:
+        - equipmentId
+        - equipmentName
+        - departmentName
+        - utilizationRate
+        - totalHoursUsed
+        - bookingCount
+        - revenue
+
+    BookingTrendPoint:
+      type: object
+      properties:
+        date:
+          type: string
+        bookingCount:
+          type: integer
+        confirmedCount:
+          type: integer
+        cancelledCount:
+          type: integer
+      required:
+        - date
+        - bookingCount
+        - confirmedCount
+        - cancelledCount
+
+    TopEquipmentItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        model:
+          type: string
+        departmentName:
+          type: string
+        bookingCount:
+          type: integer
+        utilizationRate:
+          type: number
+        revenue:
+          type: number
+      required:
+        - id
+        - name
+        - model
+        - departmentName
+        - bookingCount
+        - utilizationRate
+        - revenue
+
+    CostAnalysisItem:
+      type: object
+      properties:
+        departmentId:
+          type: integer
+        departmentName:
+          type: string
+        totalCost:
+          type: number
+        equipmentCount:
+          type: integer
+        bookingCount:
+          type: integer
+      required:
+        - departmentId
+        - departmentName
+        - totalCost
+        - equipmentCount
+        - bookingCount
+
+    SharingStats:
+      type: object
+      properties:
+        totalAgreements:
+          type: integer
+        activeAgreements:
+          type: integer
+        pendingRequests:
+          type: integer
+        totalRevenue:
+          type: number
+        partneredInstitutions:
+          type: integer
+      required:
+        - totalAgreements
+        - activeAgreements
+        - pendingRequests
+        - totalRevenue
+        - partneredInstitutions

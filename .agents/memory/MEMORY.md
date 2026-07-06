@@ -1,0 +1,2 @@
+- [Clerk React version](clerk-react-version.md) — @clerk/react must be pinned to ^6.x, NOT 5.x (broken release missing @clerk/shared exports)
+- [Orval TS2308 fix](orval-ts2308-fix.md) — endpoints with both path params AND query params cause TS2308; move equipmentId to query-only params

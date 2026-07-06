@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Lab Resource Utilization Platform"
+version = "1.0.0"
+id = "artifacts/lab-platform"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18948
+
+[services.development]
+run = "pnpm --filter @workspace/lab-platform run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lab-platform", "run", "build" ]
+publicDir = "artifacts/lab-platform/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18948"
+BASE_PATH = "/"
